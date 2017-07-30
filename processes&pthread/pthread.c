@@ -7,11 +7,11 @@ long protVariable = 0L;
 
 void *mythread(void *arg) {
 	int i;
+	pthread_mutex_lock(&cntr_mutex);
 	for (i=0;i<10000;i++) {
-		//pthread_mutex_lock(&cntr_mutex);
 		protVariable++;	
-		//pthread_mutex_unlock(&cntr_mutex);
 	}
+	pthread_mutex_unlock(&cntr_mutex);
 	pthread_exit(NULL);
 }
 

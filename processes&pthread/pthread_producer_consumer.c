@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <pthread.h>
+#include <sched.h>
 
 pthread_mutex_t cntr_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cntr_cond = PTHREAD_COND_INITIALIZER;
@@ -8,12 +9,12 @@ long protVariable = 0L;
 
 void *producer(void *arg) {
 	int i;
-	for (i=0;i<1000000;i++) {
+	for (i=0;i<10000;i++) {
 		pthread_mutex_lock(&cntr_mutex);
 		printf("Producer:make %d, product:%d\n", i,protVariable);
-		protVariable++;	
-		pthread_cond_broadcast(&cntr_cond);
+		protVariable+=i;	
 		pthread_mutex_unlock(&cntr_mutex);
+		pthread_cond_broadcast(&cntr_cond);
 	}
 	pthread_exit(NULL);
 }
@@ -36,7 +37,7 @@ void *consumor(void *arg) {
 
 }
 
-#define consumers_amount 3
+#define consumers_amount 10
 
 int
 main(int argc, char **argv)
@@ -47,18 +48,23 @@ main(int argc, char **argv)
 	int ret;
 	int i;
 	int n[consumers_amount];
+
+	/*create produceor*/
 	ret=pthread_create(&pthread,NULL,producer,NULL);
 	if (ret!=0) {
 		perror("pthread_create");
 	}
+	/*create consumers*/
 	for(i=0;i<consumers_amount;i++) {
 		n[i]=i;
 		pthread_create(&consumers[i],NULL, consumor, &n[i]);
+		if (ret!=0) {
+			perror("pthread_create");
+		}
 	}	
+	/*wait for produceor*/
 	ret=pthread_join(pthread,NULL);
-	if (ret!=0) {
-		perror("pthread_create");
-	}
+
 	printf("protVariable:%ld",protVariable);
 	while(protVariable>0);
 

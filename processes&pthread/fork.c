@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 
 int
 main(int argc, char **argv)
 {
-	pid_t parent;
-	pid_t child;
 	pid_t pid;
 	int i;
 	int status;
@@ -20,6 +19,7 @@ main(int argc, char **argv)
 			printf("Child process: Hello!\n");
 			sleep(1);
 		}
+		exit(58);
 		break;
 	case -1:
 		perror("fork");
@@ -30,9 +30,9 @@ main(int argc, char **argv)
 		for (i=0;i<10;i++) {
 			printf("Parent process: Hi!\n");
 		}
-		printf("I'm waiting\n");
+		printf("I'm parent and waiting\n");
 		wait(&status);
-		printf("I'm going to finished\n");
+		printf("I have recv child's return value: %d\n",WEXITSTATUS(status));
 		break;
 		
 	}
