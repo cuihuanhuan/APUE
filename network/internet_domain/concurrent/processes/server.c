@@ -17,13 +17,11 @@
 #define BUFFER_SIZE 128
 
 
-pthread_mutex_t sockfd_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t pthread_cond_sockfd = PTHREAD_COND_INITIALIZER;
 
 
-void *doit(void *sockfd)
+void *doit(int sockfd)
 {
-	int peerfd = *(int *)sockfd;
+	int peerfd = sockfd;
 	char buffer[BUFFER_SIZE] = {0};
 	char ipbuffer[INET_ADDRSTRLEN];
 	int nwrite;
@@ -31,15 +29,13 @@ void *doit(void *sockfd)
 	struct sockaddr_storage clientaddr;
 	socklen_t clientaddrlen;
 	int retval = 1;
-	pthread_mutex_lock(&sockfd_mutex);
-	pthread_cond_signal(&pthread_cond_sockfd);
-	pthread_mutex_unlock(&sockfd_mutex);
+
         strcpy(buffer, "\tWelcome login this server\n");
         int msg_size = strlen("\tWelcome login this server\n");
         if ((nwrite=write(peerfd, buffer, msg_size)) != msg_size) {
-            perror("write");
+            perror("write:send welcome failed");
             shutdown(peerfd, SHUT_RDWR);
-            pthread_exit(&retval);
+	    exit(retval);
         }
         while(1) {
             if ((nread = read(peerfd, buffer, BUFFER_SIZE)) == -1) {
@@ -77,8 +73,8 @@ int main(int argc,char **argv)
     struct sockaddr_in serveraddr;
     struct sockaddr_storage clientaddr;
     socklen_t clientaddrlen;
-    pthread_t thread;
     struct mypeer peer_sock;
+    pid_t childpid;
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
@@ -103,10 +99,13 @@ int main(int argc,char **argv)
             perror("accept");
             continue;
         }
-	pthread_create(&thread, NULL, doit, &peer_sock);
-	pthread_mutex_lock(&sockfd_mutex);
-        pthread_cond_wait(&pthread_cond_sockfd, &sockfd_mutex);
-	pthread_mutex_unlock(&sockfd_mutex);
+	
+	if ((childpid = fork()) == 0) {
+		close(sockfd);
+		doit(peer_sock.peerfd);
+		exit(0);
+	}
+	close(peer_sock.peerfd);
     }
     return 0;
 }
