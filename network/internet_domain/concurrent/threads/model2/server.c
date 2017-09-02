@@ -34,10 +34,7 @@ void *thread_main(void *arg)
 	struct sockaddr_storage clientaddr;
 	socklen_t clientaddrlen;
 	int retval = 1;
-
 	pthread_detach(pthread_self());
-
-
 	while(1) {
 		pthread_mutex_lock(&clifd_mutex);
 		while(iget == iput) {
@@ -57,7 +54,6 @@ void *thread_main(void *arg)
 			shutdown(peerfd, SHUT_RDWR);
 			pthread_exit(&retval);
 		}
-
 		for(;;) {
 
 			if ((nread = read(peerfd, buffer, BUFFER_SIZE)) == -1) {

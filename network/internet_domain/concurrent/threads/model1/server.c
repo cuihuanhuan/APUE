@@ -9,17 +9,16 @@
        #include <netinet/ip.h> /* superset of previous */
        #include <arpa/inet.h>
        #include <pthread.h>
-
-
-
-
 #define SERVICE_PORT 50001
 #define BUFFER_SIZE 128
-
-
 pthread_mutex_t sockfd_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t pthread_cond_sockfd = PTHREAD_COND_INITIALIZER;
 
+    struct mypeer{
+	    int peerfd;
+	    struct sockaddr_storage clientaddr;
+	    socklen_t clientaddrlen;
+    };
 
 void *doit(void *sockfd)
 {
@@ -28,8 +27,8 @@ void *doit(void *sockfd)
 	char ipbuffer[INET_ADDRSTRLEN];
 	int nwrite;
 	int nread;
-	struct sockaddr_storage clientaddr;
-	socklen_t clientaddrlen;
+	struct sockaddr_storage clientaddr = ((struct mypeer *)sockfd)->clientaddr;
+	socklen_t clientaddrlen = ((struct mypeer *)sockfd)->clientaddrlen;
 	int retval = 1;
 
 	pthread_detach(pthread_self());
@@ -69,11 +68,6 @@ void *doit(void *sockfd)
         }
         close(peerfd);
 }
-    struct mypeer{
-	    int peerfd;
-	    struct sockaddr_storage clientaddr;
-	    socklen_t clientaddrlen;
-    };
 int main(int argc,char **argv)
 {
     int sockfd;
@@ -83,6 +77,7 @@ int main(int argc,char **argv)
     socklen_t clientaddrlen;
     pthread_t thread;
     struct mypeer peer_sock;
+	char ipbuffer[INET_ADDRSTRLEN];
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
@@ -101,7 +96,7 @@ int main(int argc,char **argv)
         exit(1);
     }
     for(;;) {
-        clientaddrlen = sizeof(struct sockaddr_storage);
+        peer_sock.clientaddrlen = sizeof(struct sockaddr_storage);
         peer_sock.peerfd = accept(sockfd, (struct sockaddr *)&peer_sock.clientaddr, &peer_sock.clientaddrlen);
         if (peerfd == -1) {
             perror("accept");
