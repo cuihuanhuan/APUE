@@ -8,13 +8,8 @@
        #include <netinet/in.h>
        #include <netinet/ip.h> /* superset of previous */
        #include <arpa/inet.h>
-
-
-
-
 #define SERVICE_PORT 50001
 #define BUFFER_SIZE 128
-
 int main(int argc,char **argv)
 {
     int sockfd;
