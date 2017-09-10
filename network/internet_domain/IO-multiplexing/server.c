@@ -51,24 +51,12 @@ main(int argc, char **argv)
 		peerfd = Accept(sockfd, (struct sockaddr *)&clientaddr, &clientaddrlen);
 
 		while(1) {
-			FD_ZERO(&rfds);
-			FD_ZERO(&wfds);
-			FD_ZERO(&efds);
-			timeout.tv_sec = 30;
-			timeout.tv_usec = 0;
-			FD_SET(STDIN_FILENO, &rfds);
-			FD_SET(peerfd, &rfds);
-
-			retval = Select(peerfd+1, &rfds, &wfds, &efds, &timeout);
-			if (FD_ISSET(STDIN_FILENO, &rfds)) {
 				int nwrite;
+				int nread;
 				fgets(readbuffer, MAXLINE, stdin);
-				strlen(readbuffer);
+				nwrite=strlen(readbuffer);
 				/*we assume send data always available*/
 				Write(peerfd, readbuffer, strlen(readbuffer)+1);
-			}
-			if (FD_ISSET(peerfd, &rfds)) {
-				int nread;
 				nread = read(peerfd, buffer, MAXLINE);
 				if (nread == -1) {
 					perror("read");
@@ -80,7 +68,6 @@ main(int argc, char **argv)
 				}
 				buffer[nread] = '\0';
 				printf("Peer:%s\n", buffer);
-			}
 		}
 	}
 	return 0;

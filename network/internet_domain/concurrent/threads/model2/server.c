@@ -19,7 +19,6 @@ pthread_cond_t clifd_cond = PTHREAD_COND_INITIALIZER;
 
 
 
-
 #define SERVICE_PORT 50001
 #define BUFFER_SIZE 128
 
